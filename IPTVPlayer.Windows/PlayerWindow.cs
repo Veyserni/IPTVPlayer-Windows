@@ -1,8 +1,10 @@
 using System;
 using System.Windows;
+using System.Runtime.InteropServices;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using LibVLCSharp.Shared;
 using LibVLCSharp.WPF;
 
@@ -17,6 +19,13 @@ public sealed class PlayerWindow : Window
     private readonly Slider _volume;
     private WindowStyle _previousStyle = WindowStyle.SingleBorderWindow;
     private WindowState _previousState = WindowState.Normal;
+    private readonly DispatcherTimer _hoverTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint { public int X; public int Y; }
+
+    [DllImport("user32.dll")]
+    private static extern bool GetCursorPos(out NativePoint point);
 
     public PlayerWindow(LibVLC libVlc, IptvChannel channel)
     {
@@ -90,11 +99,12 @@ public sealed class PlayerWindow : Window
         _videoView.Content = overlay;
         Content = _videoView;
 
-        _videoView.MouseMove += (_, _) => _controls.Visibility = Visibility.Visible;
-        _videoView.MouseLeave += (_, _) => _controls.Visibility = Visibility.Collapsed;
+        _hoverTimer.Tick += (_, _) => UpdateControlsVisibility();
+        _hoverTimer.Start();
 
         Closed += (_, _) =>
         {
+            _hoverTimer.Stop();
             try { _mediaPlayer.Stop(); } catch { }
             _videoView.MediaPlayer = null;
             _mediaPlayer.Dispose();
@@ -104,6 +114,27 @@ public sealed class PlayerWindow : Window
         media.AddOption(":network-caching=1500");
         media.AddOption(":http-reconnect");
         _mediaPlayer.Play(media);
+    }
+
+    private void UpdateControlsVisibility()
+    {
+        if (!IsVisible || !GetCursorPos(out NativePoint p))
+        {
+            _controls.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        try
+        {
+            Point local = PointFromScreen(new Point(p.X, p.Y));
+            bool inside = local.X >= 0 && local.Y >= 0 &&
+                          local.X <= ActualWidth && local.Y <= ActualHeight;
+            _controls.Visibility = inside ? Visibility.Visible : Visibility.Collapsed;
+        }
+        catch
+        {
+            _controls.Visibility = Visibility.Collapsed;
+        }
     }
 
     private Button MakeButton(string text, string tooltip, RoutedEventHandler onClick, double width)
