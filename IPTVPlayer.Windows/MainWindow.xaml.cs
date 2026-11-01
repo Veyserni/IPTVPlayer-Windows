@@ -284,6 +284,9 @@ public partial class MainWindow : Window
         if (_libVlc is null || _currentChannel is null)
             return;
 
+        try { _mediaPlayer?.Stop(); } catch { }
+        SidebarNowPlayingText.Text = "Ayrı pencerede oynatılıyor";
+
         var window = new PlayerWindow(_libVlc, _currentChannel);
         window.Show();
     }
