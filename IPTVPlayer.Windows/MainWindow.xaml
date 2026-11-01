@@ -135,7 +135,7 @@
                     </ListBox>
 
                     <Grid Grid.Column="1" Margin="12,0,0,0"
-                          x:Name="PlayerHost" MouseEnter="PlayerHost_MouseEnter" MouseLeave="PlayerHost_MouseLeave">
+                          x:Name="PlayerHost">
                         <Border Background="Black" CornerRadius="16" ClipToBounds="True">
                             <vlc:VideoView x:Name="VideoView">
                                 <Grid>
