@@ -1,0 +1,40 @@
+name: Build Windows App
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore IPTVPlayer.Windows/IPTVPlayer.Windows.csproj
+
+      - name: Build
+        run: dotnet build IPTVPlayer.Windows/IPTVPlayer.Windows.csproj -c Release --no-restore
+
+      - name: Publish Windows x64
+        run: dotnet publish IPTVPlayer.Windows/IPTVPlayer.Windows.csproj -c Release -r win-x64 --self-contained true --no-build -o publish
+
+      - name: Package
+        shell: pwsh
+        run: Compress-Archive -Path publish\* -DestinationPath IPTVPlayer-Windows-x64.zip -Force
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: IPTVPlayer-Windows-x64
+          path: IPTVPlayer-Windows-x64.zip
+          if-no-files-found: error
