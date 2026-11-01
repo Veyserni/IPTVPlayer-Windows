@@ -4,11 +4,13 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using LibVLCSharp.Shared;
 
 namespace IPTVPlayer.Windows;
@@ -26,6 +28,13 @@ public partial class MainWindow : Window
     private CatalogFilter _filter = CatalogFilter.All;
     private string _sportGroup = string.Empty;
     private IptvChannel? _currentChannel;
+    private readonly DispatcherTimer _hoverTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint { public int X; public int Y; }
+
+    [DllImport("user32.dll")]
+    private static extern bool GetCursorPos(out NativePoint point);
 
     public MainWindow()
     {
@@ -39,6 +48,7 @@ public partial class MainWindow : Window
 
         Loaded += MainWindow_Loaded;
         Closed += MainWindow_Closed;
+        _hoverTimer.Tick += (_, _) => UpdatePlayerControlsVisibility();
     }
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -49,6 +59,7 @@ public partial class MainWindow : Window
             _libVlc = new LibVLC("--network-caching=1500");
             _mediaPlayer = new MediaPlayer(_libVlc) { Volume = 80 };
             VideoView.MediaPlayer = _mediaPlayer;
+            _hoverTimer.Start();
         }
         catch (Exception ex)
         {
@@ -58,6 +69,7 @@ public partial class MainWindow : Window
 
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
+        _hoverTimer.Stop();
         _shutdown.Cancel();
         try { _mediaPlayer?.Stop(); } catch { }
         VideoView.MediaPlayer = null;
@@ -276,11 +288,26 @@ public partial class MainWindow : Window
         window.Show();
     }
 
-    private void PlayerHost_MouseEnter(object sender, MouseEventArgs e)
-        => PlayerControls.Visibility = Visibility.Visible;
+    private void UpdatePlayerControlsVisibility()
+    {
+        if (MainView.Visibility != Visibility.Visible || !PlayerHost.IsVisible || !GetCursorPos(out NativePoint p))
+        {
+            PlayerControls.Visibility = Visibility.Collapsed;
+            return;
+        }
 
-    private void PlayerHost_MouseLeave(object sender, MouseEventArgs e)
-        => PlayerControls.Visibility = Visibility.Collapsed;
+        try
+        {
+            Point local = PlayerHost.PointFromScreen(new Point(p.X, p.Y));
+            bool inside = local.X >= 0 && local.Y >= 0 &&
+                          local.X <= PlayerHost.ActualWidth && local.Y <= PlayerHost.ActualHeight;
+            PlayerControls.Visibility = inside ? Visibility.Visible : Visibility.Collapsed;
+        }
+        catch
+        {
+            PlayerControls.Visibility = Visibility.Collapsed;
+        }
+    }
 
     private void Fullscreen_Click(object sender, RoutedEventArgs e) => ToggleFullscreen();
 
