@@ -1,0 +1,116 @@
+<Window x:Class="IPTVPlayer.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
+        Title="IPTV Player" Width="1500" Height="900" MinWidth="1100" MinHeight="700"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
+        KeyDown="Window_KeyDown">
+    <Grid Margin="16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="270" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="{StaticResource PanelBrush}" CornerRadius="18" Padding="16" Margin="0,0,14,0">
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Bottom" x:Name="StatusText" Text="Hazır" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="4,12,4,0" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="IPTV PLAYER" FontSize="25" FontWeight="Bold" Margin="4,2,0,16" />
+
+                        <TextBlock Text="Kayıtlı Hesaplar" Foreground="{StaticResource MutedBrush}" Margin="4,0,0,6" />
+                        <ItemsControl x:Name="SavedAccountsList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding Username}" Tag="{Binding}" Click="SavedAccount_Click" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Expander Header="Yeni hesapla giriş" IsExpanded="True" Foreground="White" Margin="0,8,0,8">
+                            <StackPanel Margin="0,8,0,0">
+                                <TextBox x:Name="ServerBox" Text="http://" ToolTip="Sunucu adresi" />
+                                <TextBox x:Name="UsernameBox" ToolTip="Kullanıcı adı" />
+                                <PasswordBox x:Name="PasswordBox" ToolTip="Şifre" />
+                                <Button Content="Giriş Yap" Background="{StaticResource AccentBrush}" Click="Login_Click" HorizontalContentAlignment="Center" />
+                            </StackPanel>
+                        </Expander>
+
+                        <Separator Margin="0,10" Background="#343956" />
+                        <Button Content="Spor" Tag="Sport" Click="Filter_Click" />
+                        <Button Content="Canlı Yayın" Tag="Live" Click="Filter_Click" />
+                        <Button Content="Filmler" Tag="Movie" Click="Filter_Click" />
+                        <Button Content="Diziler" Tag="Series" Click="Filter_Click" />
+                        <Button Content="Tümü" Tag="All" Click="Filter_Click" />
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                <TextBlock Text="Kanallar" FontSize="28" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Width="330" ToolTip="Kanal ara..." TextChanged="SearchBox_TextChanged" />
+            </DockPanel>
+
+            <WrapPanel Grid.Row="1" x:Name="SportTabs" Visibility="Collapsed" Margin="0,0,0,10">
+                <Button Content="Tümü" Tag="" Click="SportGroup_Click" />
+                <Button Content="beIN Sports" Tag="beIN" Click="SportGroup_Click" />
+                <Button Content="S Sport" Tag="S Sport" Click="SportGroup_Click" />
+                <Button Content="Tivibu Spor" Tag="Tivibu" Click="SportGroup_Click" />
+                <Button Content="Tabii Spor" Tag="Tabii" Click="SportGroup_Click" />
+                <Button Content="Exxen Spor" Tag="Exxen" Click="SportGroup_Click" />
+                <Button Content="TRT Spor" Tag="TRT Spor" Click="SportGroup_Click" />
+                <Button Content="A Spor" Tag="A Spor" Click="SportGroup_Click" />
+                <Button Content="Eurosport" Tag="Eurosport" Click="SportGroup_Click" />
+            </WrapPanel>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.92*" />
+                    <ColumnDefinition Width="1.35*" />
+                </Grid.ColumnDefinitions>
+
+                <ListBox Grid.Column="0" x:Name="ChannelList" Background="#0E101C" BorderThickness="0"
+                         MouseDoubleClick="ChannelList_MouseDoubleClick">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource CardBrush}" CornerRadius="10" Margin="3" Padding="12">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" MaxHeight="44" />
+                                    <TextBlock Text="{Binding Group}" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,4,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Grid Grid.Column="1" Margin="12,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0" Background="Black" CornerRadius="14" ClipToBounds="True">
+                        <vlc:VideoView x:Name="VideoView" />
+                    </Border>
+                    <Border Grid.Row="1" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="10" Margin="0,8,0,0">
+                        <DockPanel>
+                            <TextBlock x:Name="NowPlayingText" Text="Kanal seçin" VerticalAlignment="Center" FontWeight="SemiBold" />
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Content="Oynat / Duraklat" Click="PlayPause_Click" Margin="4,0" />
+                                <Button Content="Tam Ekran (F11)" Click="Fullscreen_Click" Margin="4,0" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
