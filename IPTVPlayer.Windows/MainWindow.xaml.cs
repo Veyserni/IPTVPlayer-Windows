@@ -25,15 +25,13 @@ public partial class MainWindow : Window
     private MediaPlayer? _mediaPlayer;
     private CatalogFilter _filter = CatalogFilter.All;
     private string _sportGroup = string.Empty;
+    private IptvChannel? _currentChannel;
 
     public MainWindow()
     {
         InitializeComponent();
 
-        _httpClient = new HttpClient
-        {
-            Timeout = TimeSpan.FromSeconds(60)
-        };
+        _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("VLC/3.0 LibVLC/3.0 IPTVPlayerWindows/1.0");
 
         ChannelList.ItemsSource = _visibleChannels;
@@ -49,12 +47,12 @@ public partial class MainWindow : Window
         {
             Core.Initialize();
             _libVlc = new LibVLC("--network-caching=1500");
-            _mediaPlayer = new MediaPlayer(_libVlc);
+            _mediaPlayer = new MediaPlayer(_libVlc) { Volume = 80 };
             VideoView.MediaPlayer = _mediaPlayer;
         }
         catch (Exception ex)
         {
-            SetStatus("Oynatıcı başlatılamadı: " + ex.Message);
+            SetLoginStatus("Oynatıcı başlatılamadı: " + ex.Message);
         }
     }
 
@@ -70,9 +68,7 @@ public partial class MainWindow : Window
     }
 
     private async void Login_Click(object sender, RoutedEventArgs e)
-    {
-        await LoginAsync(ServerBox.Text, UsernameBox.Text, PasswordBox.Password);
-    }
+        => await LoginAsync(ServerBox.Text, UsernameBox.Text, PasswordBox.Password);
 
     private async void SavedAccount_Click(object sender, RoutedEventArgs e)
     {
@@ -87,13 +83,13 @@ public partial class MainWindow : Window
 
         if (string.IsNullOrWhiteSpace(server) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            SetStatus("Sunucu, kullanıcı adı ve şifre gerekli.");
+            SetLoginStatus("Sunucu, kullanıcı adı ve şifre gerekli.");
             return;
         }
 
         try
         {
-            SetStatus("Hesap doğrulanıyor...");
+            SetLoginStatus("Hesap doğrulanıyor...");
             string apiUrl = $"{server}/player_api.php?username={Uri.EscapeDataString(username)}&password={Uri.EscapeDataString(password)}";
             using HttpResponseMessage apiResponse = await _httpClient.GetAsync(apiUrl, _shutdown.Token);
             apiResponse.EnsureSuccessStatusCode();
@@ -101,11 +97,11 @@ public partial class MainWindow : Window
             if (!apiText.Contains("\"auth\":1", StringComparison.OrdinalIgnoreCase) &&
                 !apiText.Contains("\"auth\": 1", StringComparison.OrdinalIgnoreCase))
             {
-                SetStatus("Giriş başarısız. Hesap bilgilerini kontrol edin.");
+                SetLoginStatus("Giriş başarısız. Hesap bilgilerini kontrol edin.");
                 return;
             }
 
-            SetStatus("Kanal listesi yükleniyor...");
+            SetLoginStatus("Kanal listesi yükleniyor...");
             string playlistUrl = $"{server}/get.php?username={Uri.EscapeDataString(username)}&password={Uri.EscapeDataString(password)}&type=m3u_plus&output=ts";
             using HttpResponseMessage playlistResponse = await _httpClient.GetAsync(playlistUrl, HttpCompletionOption.ResponseHeadersRead, _shutdown.Token);
             playlistResponse.EnsureSuccessStatusCode();
@@ -114,7 +110,7 @@ public partial class MainWindow : Window
 
             if (parsed.Count == 0)
             {
-                SetStatus("Liste geldi ancak kanal bulunamadı.");
+                SetLoginStatus("Liste geldi ancak kanal bulunamadı.");
                 return;
             }
 
@@ -122,15 +118,24 @@ public partial class MainWindow : Window
             _allChannels.AddRange(parsed);
             _accountStore.SaveSuccessful(new SavedAccount { Server = server, Username = username, Password = password });
             SavedAccountsList.ItemsSource = _accountStore.Load();
+
+            ServerBox.Clear();
+            UsernameBox.Clear();
+            PasswordBox.Clear();
+
+            LoginView.Visibility = Visibility.Collapsed;
+            MainView.Visibility = Visibility.Visible;
+
+            _filter = CatalogFilter.Sport;
+            SportTabs.Visibility = Visibility.Visible;
             ApplyFilters();
-            SetStatus($"{_allChannels.Count:N0} kanal yüklendi.");
         }
         catch (OperationCanceledException) when (_shutdown.IsCancellationRequested)
         {
         }
         catch (Exception ex)
         {
-            SetStatus("Yükleme hatası: " + ex.Message);
+            SetLoginStatus("Yükleme hatası: " + ex.Message);
         }
     }
 
@@ -151,10 +156,7 @@ public partial class MainWindow : Window
         ApplyFilters();
     }
 
-    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        ApplyFilters();
-    }
+    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e) => ApplyFilters();
 
     private void ApplyFilters()
     {
@@ -190,20 +192,13 @@ public partial class MainWindow : Window
     }
 
     private static bool IsSport(IptvChannel channel)
-    {
-        return ContainsAny(channel.Name + " " + channel.Group,
+        => ContainsAny(channel.Name + " " + channel.Group,
             "spor", "sport", "bein", "s sport", "tivibu", "tabii", "exxen", "eurosport", "trt spor", "a spor", "d-smart");
-    }
 
     private static bool ContainsAny(string text, params string[] words)
-    {
-        return words.Any(word => text.Contains(word, StringComparison.OrdinalIgnoreCase));
-    }
+        => words.Any(word => text.Contains(word, StringComparison.OrdinalIgnoreCase));
 
-    private void ChannelList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        PlaySelectedChannel();
-    }
+    private void ChannelList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => PlaySelectedChannel();
 
     private void PlaySelectedChannel()
     {
@@ -216,19 +211,16 @@ public partial class MainWindow : Window
             media.AddOption(":network-caching=1500");
             media.AddOption(":http-reconnect");
             _mediaPlayer.Play(media);
-            NowPlayingText.Text = channel.Name;
-            SetStatus("Oynatılıyor: " + channel.Name);
+            _currentChannel = channel;
+            SidebarNowPlayingText.Text = channel.Name;
         }
         catch (Exception ex)
         {
-            SetStatus("Kanal açılamadı: " + ex.Message);
+            SidebarNowPlayingText.Text = "Kanal açılamadı: " + ex.Message;
         }
     }
 
-    private void PlayPause_Click(object sender, RoutedEventArgs e)
-    {
-        TogglePlayPause();
-    }
+    private void PlayPause_Click(object sender, RoutedEventArgs e) => TogglePlayPause();
 
     private void TogglePlayPause()
     {
@@ -241,10 +233,56 @@ public partial class MainWindow : Window
             _mediaPlayer.Play();
     }
 
-    private void Fullscreen_Click(object sender, RoutedEventArgs e)
+    private void Rewind_Click(object sender, RoutedEventArgs e) => SeekBy(-10_000);
+    private void Forward_Click(object sender, RoutedEventArgs e) => SeekBy(10_000);
+
+    private void SeekBy(long deltaMs)
     {
-        ToggleFullscreen();
+        if (_mediaPlayer is null)
+            return;
+
+        try
+        {
+            long current = _mediaPlayer.Time;
+            long target = Math.Max(0, current + deltaMs);
+            if (_mediaPlayer.Length > 0)
+                target = Math.Min(target, _mediaPlayer.Length - 250);
+            _mediaPlayer.Time = target;
+        }
+        catch
+        {
+            // Bazı canlı yayınlar seek desteklemez.
+        }
     }
+
+    private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_mediaPlayer is not null)
+            _mediaPlayer.Volume = (int)e.NewValue;
+    }
+
+    private void Mute_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mediaPlayer is not null)
+            _mediaPlayer.Mute = !_mediaPlayer.Mute;
+    }
+
+    private void Popout_Click(object sender, RoutedEventArgs e)
+    {
+        if (_libVlc is null || _currentChannel is null)
+            return;
+
+        var window = new PlayerWindow(_libVlc, _currentChannel);
+        window.Show();
+    }
+
+    private void PlayerHost_MouseEnter(object sender, MouseEventArgs e)
+        => PlayerControls.Visibility = Visibility.Visible;
+
+    private void PlayerHost_MouseLeave(object sender, MouseEventArgs e)
+        => PlayerControls.Visibility = Visibility.Collapsed;
+
+    private void Fullscreen_Click(object sender, RoutedEventArgs e) => ToggleFullscreen();
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
@@ -284,8 +322,8 @@ public partial class MainWindow : Window
         }
     }
 
-    private void SetStatus(string message)
+    private void SetLoginStatus(string message)
     {
-        StatusText.Text = message;
+        LoginStatusText.Text = message;
     }
 }
