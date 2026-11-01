@@ -68,11 +68,11 @@
         <!-- MAIN APP -->
         <Grid x:Name="MainView" Visibility="Collapsed" Margin="16">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="275" />
+                <ColumnDefinition x:Name="SidebarColumn" Width="275" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="{StaticResource PanelBrush}" CornerRadius="20" Padding="16" Margin="0,0,14,0">
+            <Border x:Name="SidebarPanel" Grid.Column="0" Background="{StaticResource PanelBrush}" CornerRadius="20" Padding="16" Margin="0,0,14,0">
                 <DockPanel LastChildFill="True">
                     <StackPanel DockPanel.Dock="Bottom" Margin="4,14,4,2">
                         <TextBlock Text="Oynatılıyor:" Foreground="{StaticResource MutedBrush}" />
@@ -99,14 +99,14 @@
                 </DockPanel>
             </Border>
 
-            <Grid Grid.Column="1">
+            <Grid x:Name="MainContent" Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <DockPanel Grid.Row="0" Margin="0,6,0,14">
+                <DockPanel x:Name="HeaderPanel" Grid.Row="0" Margin="0,6,0,14">
                     <TextBlock Text="Kanallar" FontSize="34" FontWeight="Bold" VerticalAlignment="Center" />
                     <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Width="360" ToolTip="Kanal ara..." TextChanged="SearchBox_TextChanged" />
                 </DockPanel>
@@ -123,10 +123,10 @@
                     <Button Content="Eurosport" Tag="Eurosport" Click="SportGroup_Click" />
                 </WrapPanel>
 
-                <Grid Grid.Row="2">
+                <Grid x:Name="ContentBody" Grid.Row="2">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="0.92*" />
-                        <ColumnDefinition Width="1.55*" />
+                        <ColumnDefinition x:Name="ChannelColumn" Width="0.92*" />
+                        <ColumnDefinition x:Name="PlayerColumn" Width="1.55*" />
                     </Grid.ColumnDefinitions>
 
                     <ListBox Grid.Column="0" x:Name="ChannelList" Background="#0E101C" BorderThickness="0"
