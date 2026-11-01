@@ -33,9 +33,7 @@ public sealed class PlayerWindow : Window
         _mediaPlayer = new MediaPlayer(_libVlc) { Volume = 80 };
         _videoView = new VideoView { MediaPlayer = _mediaPlayer };
 
-        var root = new Grid();
-        Content = root;
-        root.Children.Add(_videoView);
+        var overlay = new Grid();
 
         var panel = new StackPanel
         {
@@ -44,32 +42,56 @@ public sealed class PlayerWindow : Window
             VerticalAlignment = VerticalAlignment.Center
         };
 
-        panel.Children.Add(MakeButton("↶ 10", (_, _) => SeekBy(-10_000), 64));
-        panel.Children.Add(MakeButton("⏯", (_, _) => TogglePlayPause(), 54));
-        panel.Children.Add(MakeButton("10 ↷", (_, _) => SeekBy(10_000), 64));
-        panel.Children.Add(MakeButton("🔊", (_, _) => _mediaPlayer.Mute = !_mediaPlayer.Mute, 48));
+        panel.Children.Add(MakeButton("↶ 10", "10 sn geri", (_, _) => SeekBy(-10_000), 64));
+        panel.Children.Add(MakeButton("⏯", "Oynat / Duraklat", (_, _) => TogglePlayPause(), 54));
+        panel.Children.Add(MakeButton("10 ↷", "10 sn ileri", (_, _) => SeekBy(10_000), 64));
 
-        _volume = new Slider { Width = 150, Minimum = 0, Maximum = 100, Value = 80, Margin = new Thickness(8,0,8,0) };
+        var separator1 = MakeSeparator();
+        panel.Children.Add(separator1);
+
+        panel.Children.Add(MakeButton("🔊", "Sesi kapat / aç", (_, _) => ToggleMute(), 48));
+
+        _volume = new Slider
+        {
+            Width = 150,
+            Minimum = 0,
+            Maximum = 100,
+            Value = 80,
+            Margin = new Thickness(8, 0, 8, 0),
+            VerticalAlignment = VerticalAlignment.Center
+        };
         _volume.ValueChanged += (_, e) => _mediaPlayer.Volume = (int)e.NewValue;
         panel.Children.Add(_volume);
 
-        panel.Children.Add(MakeButton("⛶", (_, _) => ToggleFullscreen(), 52));
+        panel.Children.Add(MakeButton("🔇", "Sesi kapat / aç", (_, _) => ToggleMute(), 48));
+
+        var separator2 = MakeSeparator();
+        panel.Children.Add(separator2);
+
+        panel.Children.Add(MakeButton("⛶", "Tam ekran (F11)", (_, _) => ToggleFullscreen(), 52));
 
         _controls = new Border
         {
-            Background = new SolidColorBrush(Color.FromArgb(210, 17, 20, 33)),
+            Background = new SolidColorBrush(Color.FromArgb(215, 17, 20, 33)),
+            BorderBrush = new SolidColorBrush(Color.FromRgb(86, 61, 132)),
+            BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(14),
-            Padding = new Thickness(10),
+            Padding = new Thickness(10, 8, 10, 8),
             Margin = new Thickness(18),
             VerticalAlignment = VerticalAlignment.Bottom,
             HorizontalAlignment = HorizontalAlignment.Center,
             Child = panel,
             Visibility = Visibility.Collapsed
         };
-        root.Children.Add(_controls);
 
-        root.MouseEnter += (_, _) => _controls.Visibility = Visibility.Visible;
-        root.MouseLeave += (_, _) => _controls.Visibility = Visibility.Collapsed;
+        overlay.Children.Add(_controls);
+
+        // LibVLCSharp.WPF overlay içerikleri VideoView.Content içinde olmalı.
+        _videoView.Content = overlay;
+        Content = _videoView;
+
+        _videoView.MouseMove += (_, _) => _controls.Visibility = Visibility.Visible;
+        _videoView.MouseLeave += (_, _) => _controls.Visibility = Visibility.Collapsed;
 
         Closed += (_, _) =>
         {
@@ -84,24 +106,46 @@ public sealed class PlayerWindow : Window
         _mediaPlayer.Play(media);
     }
 
-    private Button MakeButton(string text, RoutedEventHandler onClick, double width)
+    private Button MakeButton(string text, string tooltip, RoutedEventHandler onClick, double width)
     {
         var b = new Button
         {
             Content = text,
+            ToolTip = tooltip,
             Width = width,
-            Margin = new Thickness(4,0,4,0),
-            Padding = new Thickness(8,6,8,6),
-            HorizontalContentAlignment = HorizontalAlignment.Center
+            Margin = new Thickness(4, 0, 4, 0),
+            Padding = new Thickness(8, 6, 8, 6),
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            Background = new SolidColorBrush(Color.FromRgb(35, 39, 68)),
+            Foreground = Brushes.White,
+            BorderBrush = new SolidColorBrush(Color.FromRgb(92, 69, 145))
         };
         b.Click += onClick;
         return b;
     }
 
+    private static Separator MakeSeparator()
+    {
+        return new Separator
+        {
+            Width = 1,
+            Height = 30,
+            Margin = new Thickness(8, 0, 8, 0),
+            Background = new SolidColorBrush(Color.FromRgb(85, 90, 118))
+        };
+    }
+
     private void TogglePlayPause()
     {
-        if (_mediaPlayer.IsPlaying) _mediaPlayer.Pause();
-        else _mediaPlayer.Play();
+        if (_mediaPlayer.IsPlaying)
+            _mediaPlayer.Pause();
+        else
+            _mediaPlayer.Play();
+    }
+
+    private void ToggleMute()
+    {
+        _mediaPlayer.Mute = !_mediaPlayer.Mute;
     }
 
     private void SeekBy(long delta)
@@ -113,7 +157,10 @@ public sealed class PlayerWindow : Window
                 target = Math.Min(target, _mediaPlayer.Length - 250);
             _mediaPlayer.Time = target;
         }
-        catch { }
+        catch
+        {
+            // Bazı canlı yayınlar zaman atlamayı desteklemez.
+        }
     }
 
     private void ToggleFullscreen()
