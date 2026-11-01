@@ -25,13 +25,9 @@ jobs:
       - name: Publish Windows x64
         run: dotnet publish IPTVPlayer.Windows/IPTVPlayer.Windows.csproj -c Release -r win-x64 --self-contained true --no-restore -o publish
 
-      - name: Package
-        shell: pwsh
-        run: Compress-Archive -Path publish\* -DestinationPath IPTVPlayer-Windows-x64.zip -Force
-
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
           name: IPTVPlayer-Windows-x64
-          path: IPTVPlayer-Windows-x64.zip
+          path: publish/
           if-no-files-found: error
