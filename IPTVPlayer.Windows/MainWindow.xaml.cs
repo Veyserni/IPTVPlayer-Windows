@@ -29,6 +29,9 @@ public partial class MainWindow : Window
     private string _sportGroup = string.Empty;
     private IptvChannel? _currentChannel;
     private readonly DispatcherTimer _hoverTimer = new() { Interval = TimeSpan.FromMilliseconds(120) };
+    private bool _videoFullscreen;
+    private WindowState _previousWindowState = WindowState.Normal;
+    private WindowStyle _previousWindowStyle = WindowStyle.SingleBorderWindow;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct NativePoint { public int X; public int Y; }
@@ -331,7 +334,7 @@ public partial class MainWindow : Window
             ToggleFullscreen();
             e.Handled = true;
         }
-        else if (e.Key == Key.Escape && WindowStyle == WindowStyle.None)
+        else if (e.Key == Key.Escape && _videoFullscreen)
         {
             ToggleFullscreen();
             e.Handled = true;
@@ -340,15 +343,42 @@ public partial class MainWindow : Window
 
     private void ToggleFullscreen()
     {
-        if (WindowStyle != WindowStyle.None)
+        if (!_videoFullscreen)
         {
+            _previousWindowState = WindowState;
+            _previousWindowStyle = WindowStyle;
+
+            SidebarPanel.Visibility = Visibility.Collapsed;
+            SidebarColumn.Width = new GridLength(0);
+            HeaderPanel.Visibility = Visibility.Collapsed;
+            SportTabs.Visibility = Visibility.Collapsed;
+            ChannelList.Visibility = Visibility.Collapsed;
+            ChannelColumn.Width = new GridLength(0);
+            PlayerColumn.Width = new GridLength(1, GridUnitType.Star);
+
+            MainView.Margin = new Thickness(0);
+            PlayerHost.Margin = new Thickness(0);
+
             WindowStyle = WindowStyle.None;
             WindowState = WindowState.Maximized;
+            _videoFullscreen = true;
         }
         else
         {
-            WindowStyle = WindowStyle.SingleBorderWindow;
-            WindowState = WindowState.Normal;
+            WindowStyle = _previousWindowStyle;
+            WindowState = _previousWindowState;
+
+            SidebarPanel.Visibility = Visibility.Visible;
+            SidebarColumn.Width = new GridLength(275);
+            HeaderPanel.Visibility = Visibility.Visible;
+            ChannelList.Visibility = Visibility.Visible;
+            ChannelColumn.Width = new GridLength(0.92, GridUnitType.Star);
+            PlayerColumn.Width = new GridLength(1.55, GridUnitType.Star);
+
+            SportTabs.Visibility = _filter == CatalogFilter.Sport ? Visibility.Visible : Visibility.Collapsed;
+            MainView.Margin = new Thickness(16);
+            PlayerHost.Margin = new Thickness(12, 0, 0, 0);
+            _videoFullscreen = false;
         }
     }
 
