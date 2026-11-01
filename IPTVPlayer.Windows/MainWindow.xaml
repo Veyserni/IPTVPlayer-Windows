@@ -6,109 +6,165 @@
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
         KeyDown="Window_KeyDown">
-    <Grid Margin="16">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="270" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0" Background="{StaticResource PanelBrush}" CornerRadius="18" Padding="16" Margin="0,0,14,0">
-            <DockPanel LastChildFill="True">
-                <TextBlock DockPanel.Dock="Bottom" x:Name="StatusText" Text="Hazır" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="4,12,4,0" />
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <Grid>
+        <!-- LOGIN SCREEN -->
+        <Grid x:Name="LoginView">
+            <Grid.Background>
+                <RadialGradientBrush Center="0.5,0.35" RadiusX="0.9" RadiusY="0.9">
+                    <GradientStop Color="#241044" Offset="0" />
+                    <GradientStop Color="#0B0D1A" Offset="0.55" />
+                    <GradientStop Color="#070913" Offset="1" />
+                </RadialGradientBrush>
+            </Grid.Background>
+
+            <StackPanel Width="650" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,24">
+                    <Border Width="76" Height="76" CornerRadius="24" Background="#8B5CF6" Margin="0,0,18,0">
+                        <TextBlock Text="▶" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+                    </Border>
+                    <TextBlock Text="IPTV " FontSize="48" FontWeight="Bold" VerticalAlignment="Center" />
+                    <TextBlock Text="PLAYER" FontSize="48" FontWeight="Bold" Foreground="#9B5CFF" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <Border Background="#15182A" BorderBrush="#6741A8" BorderThickness="1.5" CornerRadius="22" Padding="30">
                     <StackPanel>
-                        <TextBlock Text="IPTV PLAYER" FontSize="25" FontWeight="Bold" Margin="4,2,0,16" />
-
-                        <TextBlock Text="Kayıtlı Hesaplar" Foreground="{StaticResource MutedBrush}" Margin="4,0,0,6" />
+                        <TextBlock Text="Kayıtlı Hesaplar" Foreground="{StaticResource MutedBrush}" Margin="2,0,0,8" />
                         <ItemsControl x:Name="SavedAccountsList">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Button Content="{Binding Username}" Tag="{Binding}" Click="SavedAccount_Click" />
+                                    <Button Content="{Binding Username}" Tag="{Binding}" Click="SavedAccount_Click"
+                                            FontSize="18" FontWeight="SemiBold" Padding="16,12"
+                                            Background="#232744" BorderBrush="#8B5CF6" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <Expander Header="Yeni hesapla giriş" IsExpanded="True" Foreground="White" Margin="0,8,0,8">
-                            <StackPanel Margin="0,8,0,0">
-                                <TextBox x:Name="ServerBox" Text="http://" ToolTip="Sunucu adresi" />
+                        <Expander Header="Yeni hesapla giriş" IsExpanded="True" Foreground="White" Margin="0,12,0,0">
+                            <StackPanel Margin="0,10,0,0">
+                                <TextBox x:Name="ServerBox" ToolTip="Sunucu adresi" />
                                 <TextBox x:Name="UsernameBox" ToolTip="Kullanıcı adı" />
                                 <PasswordBox x:Name="PasswordBox" ToolTip="Şifre" />
-                                <Button Content="Giriş Yap" Background="{StaticResource AccentBrush}" Click="Login_Click" HorizontalContentAlignment="Center" />
+                                <Button Content="Giriş Yap" Background="{StaticResource AccentBrush}" Click="Login_Click"
+                                        HorizontalContentAlignment="Center" FontWeight="Bold" FontSize="17" Margin="0,10,0,0"/>
                             </StackPanel>
                         </Expander>
 
-                        <Separator Margin="0,10" Background="#343956" />
-                        <Button Content="Spor" Tag="Sport" Click="Filter_Click" />
-                        <Button Content="Canlı Yayın" Tag="Live" Click="Filter_Click" />
-                        <Button Content="Filmler" Tag="Movie" Click="Filter_Click" />
-                        <Button Content="Diziler" Tag="Series" Click="Filter_Click" />
-                        <Button Content="Tümü" Tag="All" Click="Filter_Click" />
+                        <TextBlock x:Name="LoginStatusText" Text="" Foreground="#C8C4D8" TextWrapping="Wrap" Margin="2,14,2,0" />
                     </StackPanel>
-                </ScrollViewer>
-            </DockPanel>
-        </Border>
+                </Border>
+            </StackPanel>
+        </Grid>
 
-        <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+        <!-- MAIN APP -->
+        <Grid x:Name="MainView" Visibility="Collapsed" Margin="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="275" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <DockPanel Grid.Row="0" Margin="0,0,0,10">
-                <TextBlock Text="Kanallar" FontSize="28" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Width="330" ToolTip="Kanal ara..." TextChanged="SearchBox_TextChanged" />
-            </DockPanel>
+            <Border Grid.Column="0" Background="{StaticResource PanelBrush}" CornerRadius="20" Padding="16" Margin="0,0,14,0">
+                <DockPanel LastChildFill="True">
+                    <StackPanel DockPanel.Dock="Bottom" Margin="4,14,4,2">
+                        <TextBlock Text="Oynatılıyor:" Foreground="{StaticResource MutedBrush}" />
+                        <TextBlock x:Name="SidebarNowPlayingText" Text="Kanal seçin" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
 
-            <WrapPanel Grid.Row="1" x:Name="SportTabs" Visibility="Collapsed" Margin="0,0,0,10">
-                <Button Content="Tümü" Tag="" Click="SportGroup_Click" />
-                <Button Content="beIN Sports" Tag="beIN" Click="SportGroup_Click" />
-                <Button Content="S Sport" Tag="S Sport" Click="SportGroup_Click" />
-                <Button Content="Tivibu Spor" Tag="Tivibu" Click="SportGroup_Click" />
-                <Button Content="Tabii Spor" Tag="Tabii" Click="SportGroup_Click" />
-                <Button Content="Exxen Spor" Tag="Exxen" Click="SportGroup_Click" />
-                <Button Content="TRT Spor" Tag="TRT Spor" Click="SportGroup_Click" />
-                <Button Content="A Spor" Tag="A Spor" Click="SportGroup_Click" />
-                <Button Content="Eurosport" Tag="Eurosport" Click="SportGroup_Click" />
-            </WrapPanel>
-
-            <Grid Grid.Row="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.92*" />
-                    <ColumnDefinition Width="1.35*" />
-                </Grid.ColumnDefinitions>
-
-                <ListBox Grid.Column="0" x:Name="ChannelList" Background="#0E101C" BorderThickness="0"
-                         MouseDoubleClick="ChannelList_MouseDoubleClick">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="{StaticResource CardBrush}" CornerRadius="10" Margin="3" Padding="12">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" MaxHeight="44" />
-                                    <TextBlock Text="{Binding Group}" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,4,0,0" />
-                                </StackPanel>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="4,6,0,38">
+                            <Border Width="52" Height="52" CornerRadius="16" Background="#8B5CF6" Margin="0,0,10,0">
+                                <TextBlock Text="▶" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
                             </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-
-                <Grid Grid.Column="1" Margin="12,0,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Border Grid.Row="0" Background="Black" CornerRadius="14" ClipToBounds="True">
-                        <vlc:VideoView x:Name="VideoView" />
-                    </Border>
-                    <Border Grid.Row="1" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="10" Margin="0,8,0,0">
-                        <DockPanel>
-                            <TextBlock x:Name="NowPlayingText" Text="Kanal seçin" VerticalAlignment="Center" FontWeight="SemiBold" />
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Button Content="Oynat / Duraklat" Click="PlayPause_Click" Margin="4,0" />
-                                <Button Content="Tam Ekran (F11)" Click="Fullscreen_Click" Margin="4,0" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="IPTV" FontSize="24" FontWeight="Bold"/>
+                                <TextBlock Text="PLAYER" FontSize="24" FontWeight="Bold" Foreground="#9B5CFF" Margin="0,-5,0,0"/>
                             </StackPanel>
-                        </DockPanel>
-                    </Border>
+                        </StackPanel>
+
+                        <Button Content="⚽  Spor" Tag="Sport" Click="Filter_Click" FontSize="17" />
+                        <Button Content="▣  Canlı Yayın" Tag="Live" Click="Filter_Click" FontSize="17" />
+                        <Button Content="▤  Filmler" Tag="Movie" Click="Filter_Click" FontSize="17" />
+                        <Button Content="▣  Diziler" Tag="Series" Click="Filter_Click" FontSize="17" />
+                        <Button Content="▦  Tümü" Tag="All" Click="Filter_Click" FontSize="17" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <DockPanel Grid.Row="0" Margin="0,6,0,14">
+                    <TextBlock Text="Kanallar" FontSize="34" FontWeight="Bold" VerticalAlignment="Center" />
+                    <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Width="360" ToolTip="Kanal ara..." TextChanged="SearchBox_TextChanged" />
+                </DockPanel>
+
+                <WrapPanel Grid.Row="1" x:Name="SportTabs" Visibility="Collapsed" Margin="0,0,0,12">
+                    <Button Content="Tümü" Tag="" Click="SportGroup_Click" />
+                    <Button Content="beIN Sports" Tag="beIN" Click="SportGroup_Click" />
+                    <Button Content="S Sport" Tag="S Sport" Click="SportGroup_Click" />
+                    <Button Content="Tivibu Spor" Tag="Tivibu" Click="SportGroup_Click" />
+                    <Button Content="Tabii Spor" Tag="Tabii" Click="SportGroup_Click" />
+                    <Button Content="Exxen Spor" Tag="Exxen" Click="SportGroup_Click" />
+                    <Button Content="TRT Spor" Tag="TRT Spor" Click="SportGroup_Click" />
+                    <Button Content="A Spor" Tag="A Spor" Click="SportGroup_Click" />
+                    <Button Content="Eurosport" Tag="Eurosport" Click="SportGroup_Click" />
+                </WrapPanel>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.92*" />
+                        <ColumnDefinition Width="1.55*" />
+                    </Grid.ColumnDefinitions>
+
+                    <ListBox Grid.Column="0" x:Name="ChannelList" Background="#0E101C" BorderThickness="0"
+                             MouseDoubleClick="ChannelList_MouseDoubleClick">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Margin="3" Padding="14">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" MaxHeight="44" />
+                                        <TextBlock Text="{Binding Group}" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Grid Grid.Column="1" Margin="12,0,0,0"
+                          x:Name="PlayerHost" MouseEnter="PlayerHost_MouseEnter" MouseLeave="PlayerHost_MouseLeave">
+                        <Border Background="Black" CornerRadius="16" ClipToBounds="True">
+                            <vlc:VideoView x:Name="VideoView">
+                                <Grid>
+                                    <Border x:Name="PlayerControls" Visibility="Collapsed"
+                                            VerticalAlignment="Bottom" Margin="18"
+                                            Background="#CC111421" CornerRadius="16" Padding="10">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Button Content="↶ 10" ToolTip="10 sn geri" Click="Rewind_Click" Width="64" HorizontalContentAlignment="Center"/>
+                                            <Button Content="⏯" ToolTip="Oynat / Duraklat" Click="PlayPause_Click" Width="54" HorizontalContentAlignment="Center" Background="#7C3AED"/>
+                                            <Button Content="10 ↷" ToolTip="10 sn ileri" Click="Forward_Click" Width="64" HorizontalContentAlignment="Center"/>
+
+                                            <Separator Width="1" Height="30" Margin="8,0" Background="#555A76"/>
+
+                                            <Button Content="🔊" ToolTip="Ses" Click="Mute_Click" Width="48" HorizontalContentAlignment="Center"/>
+                                            <Slider x:Name="VolumeSlider" Width="150" Minimum="0" Maximum="100" Value="80"
+                                                    VerticalAlignment="Center" ValueChanged="VolumeSlider_ValueChanged" Margin="6,0,6,0"/>
+                                            <Button Content="🔇" ToolTip="Sesi kapat/aç" Click="Mute_Click" Width="48" HorizontalContentAlignment="Center"/>
+
+                                            <Separator Width="1" Height="30" Margin="8,0" Background="#555A76"/>
+
+                                            <Button Content="↗  Ayrı Pencerede Aç" ToolTip="İkinci ekrana taşımak için ayrı pencere aç"
+                                                    Click="Popout_Click" HorizontalContentAlignment="Center" Padding="14,8"/>
+                                            <Button Content="⛶" ToolTip="Tam ekran (F11)" Click="Fullscreen_Click" Width="52" HorizontalContentAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </vlc:VideoView>
+                        </Border>
+                    </Grid>
                 </Grid>
             </Grid>
         </Grid>
