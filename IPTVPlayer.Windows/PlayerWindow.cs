@@ -11,7 +11,7 @@ namespace IPTVPlayer.Windows;
 public sealed class PlayerWindow : Window
 {
     private readonly LibVLC _libVlc;
-    private readonly MediaPlayer _mediaPlayer;
+    private readonly LibVLCSharp.Shared.MediaPlayer _mediaPlayer;
     private readonly VideoView _videoView;
     private readonly Border _controls;
     private readonly Slider _volume;
@@ -30,7 +30,7 @@ public sealed class PlayerWindow : Window
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         KeyDown += PlayerWindow_KeyDown;
 
-        _mediaPlayer = new MediaPlayer(_libVlc) { Volume = 80 };
+        _mediaPlayer = new LibVLCSharp.Shared.MediaPlayer(_libVlc) { Volume = 80 };
         _videoView = new VideoView { MediaPlayer = _mediaPlayer };
 
         var overlay = new Grid();
